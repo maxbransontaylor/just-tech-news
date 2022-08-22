@@ -2,7 +2,9 @@ const router = require("express").Router();
 const { User } = require("../../models");
 
 router.get("/", (req, res) => {
-  User.findAll({ attributes: { exclude: ["password"] } })
+  User.findAll({
+    // attributes: { exclude: ["password"] }
+  })
     .then((dbUserData) => res.json(dbUserData))
     .catch((err) => {
       console.log(err);
@@ -11,7 +13,7 @@ router.get("/", (req, res) => {
 });
 router.get("/:id", (req, res) => {
   User.findOne({
-    attributes: { exclude: ["password"] },
+    //attributes: { exclude: ["password"] },
     where: { id: req.params.id },
   })
     .then((dbUserData) => {
@@ -38,8 +40,26 @@ router.post("/", (req, res) => {
       res.status(500).json(err);
     });
 });
+router.post("/login", (req, res) => {
+  User.findOne({
+    where: { email: req.body.email },
+  }).then((dbUserData) => {
+    if (!dbUserData) {
+      res
+        .status(400)
+        .json({ message: "could not find user with that email address" });
+      return;
+    }
+    const validPassword = dbUserData.checkPassword(req.body.password);
+    if (!validPassword) {
+      res.status(400).json({ message: "Incorrect password" });
+      return;
+    }
+    res.json({ user: dbUserData, message: "login succesful" });
+  });
+});
 router.put("/:id", (req, res) => {
-  User.update(req.body, { where: { id: req.params.id } })
+  User.update(req.body, { individualHooks: true, where: { id: req.params.id } })
     .then((dbUserData) => {
       if (!dbUserData) {
         res.status(404).json({ message: "no user found with this id" });
