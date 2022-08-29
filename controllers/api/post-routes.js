@@ -65,9 +65,20 @@ router.post("/", (req, res) => {
 });
 // Make sure this PUT route is defined before the /:id PUT route, though. Otherwise, Express.js will think the word "upvote" is a valid parameter for /:id.
 router.put("/upvote", (req, res) => {
-  Post.upvote(req.body, { Vote })
-    .then((dbPostData) => res.json(dbPostData))
-    .catch((err) => res.status(400).json(err));
+  if (req.session) {
+    console.log("SESSION DETECTED TIME TO TRY AND MAKE AN UPVOTE BOYS");
+    Post.upvote(
+      { ...req.body, user_id: req.session.user_id },
+      { Vote, Comment, User }
+    )
+      .then((dbPostData) => res.json(dbPostData))
+      .catch((err) => {
+        console.log(err);
+        res.status(400).json(err);
+      });
+  } else {
+    return;
+  }
 });
 router.put("/:id", (req, res) => {
   Post.update({ title: req.body.title }, { where: { book_id: req.params.id } })

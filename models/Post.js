@@ -9,7 +9,7 @@ class Post extends Model {
     }).then(() => {
       return Post.findOne({
         where: {
-          id: req.body.post_id,
+          id: body.post_id,
         },
         attributes: [
           "id",
